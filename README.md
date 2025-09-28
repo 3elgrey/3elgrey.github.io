@@ -1,5 +1,7 @@
 # Personal Developer Portfolio
 
+This repo is used as domain to host projects/wikis/portfolio etc.
+
 A clean, modern, and responsive personal developer portfolio website built with HTML, CSS, and JavaScript. Designed to be easily customizable and hosted on GitHub Pages.
 
 ## Table of Contents
