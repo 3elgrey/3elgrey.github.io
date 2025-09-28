@@ -87,26 +87,57 @@ In `<section id="contact">`, update:
 
 ## Deployment on GitHub Pages
 
-1.  **Create a GitHub Repository:**
-    If you haven't already, create a new repository on GitHub to host your portfolio.
+1.  **Prerequisites:**
+    *   Make sure you have [Git](https://git-scm.com/downloads) installed on your system.
 
-2.  **Push Your Code:**
-    Add your local project files to the repository and push them to GitHub.
+2.  **Create a GitHub Repository:**
+    *   If you haven't already, create a new repository on GitHub.
+    *   For a personal portfolio, a good repository name is `your-username.github.io`.
+
+3.  **Initialize Git and Make Your First Commit:**
+    Open your terminal, navigate to your project folder, and run the following commands:
     ```bash
+    # Initialize a new Git repository
+    git init
+
+    # Add all files to be tracked
+    git add .
+
+    # Commit the files with a message
+    git commit -m "Initial commit"
+    ```
+
+4.  **Link Your Local Repository to GitHub:**
+    ```bash
+    # Replace the URL with your own repository's URL
     git remote add origin https://github.com/your-username/your-repo-name.git
-    git branch -M main
+    
+    # Verify the remote URL
+    git remote -v
+    ```
+
+5.  **Push Your Code to GitHub:**
+    This command pushes your code and sets up a tracking connection between your local `main` branch and the remote `origin/main` branch.
+    ```bash
     git push -u origin main
     ```
 
-3.  **Enable GitHub Pages:**
+6.  **Enable GitHub Pages:**
     *   Go to your repository on GitHub.
     *   Click on the **Settings** tab.
     *   In the left sidebar, click on **Pages**.
     *   Under **Source**, select the `main` branch (or whichever branch you are using) and the `/root` folder.
     *   Click **Save**.
 
-4.  **Access Your Site:**
+7.  **Access Your Site:**
     GitHub will provide you with a URL (e.g., `https://your-username.github.io/your-repo-name/`). It might take a few minutes for the site to become live.
+
+### Troubleshooting
+
+*   **`git` is not recognized...**: This means Git is not installed or not in your system's PATH. Re-install Git, making sure to select the option "Git from the command line and also from 3rd-party software" during installation.
+*   **`src refspec main does not match any`**: This error occurs if you try to push before making any commits. Run `git add .` and `git commit -m "Initial commit"` first.
+*   **`There is no tracking information for the current branch`**: This happens if you forget the `-u` flag on your first push. Run `git push -u origin main` to establish the tracking link.
+*   **`fatal: refusing to merge unrelated histories`**: This can happen if you created the remote repository with a README or other files, and then tried to push a new local repository to it. Use the following command to merge the histories: `git pull origin main --allow-unrelated-histories`.
 
 ---
 
