@@ -25,7 +25,7 @@ describe('CSS Structure Validation', () => {
 
     test('should contain header styles', () => {
       expect(cssContent).toMatch(/header\s*{/);
-      expect(cssContent).toMatch(/nav\s*{/);
+      expect(cssContent).toMatch(/nav ul\s*{/);
     });
   });
 

@@ -1,5 +1,10 @@
 // Jest setup file
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
+
+// Mock TextEncoder and TextDecoder for JSDOM
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock window.scrollTo
 Object.defineProperty(window, 'scrollTo', {
