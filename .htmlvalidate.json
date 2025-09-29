@@ -1,0 +1,23 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "wcag/h30": "error",
+    "wcag/h32": "error",
+    "wcag/h36": "error",
+    "wcag/h37": "error",
+    "wcag/h67": "error",
+    "wcag/h71": "error",
+    "wcag/h91": "error",
+    "attr-quotes": "error",
+    "doctype-html5": "error",
+    "element-name": "error",
+    "no-dup-attr": "error",
+    "no-dup-id": "error",
+    "no-unknown-elements": "error",
+    "void-content": "error",
+    "no-self-closing": "off",
+    "no-trailing-whitespace": "warn",
+    "indent-style": "warn"
+  }
+}
+

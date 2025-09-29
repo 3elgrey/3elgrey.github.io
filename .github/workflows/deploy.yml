@@ -1,0 +1,114 @@
+name: Deploy Portfolio
+
+on:
+  workflow_run:
+    workflows: ["CI - Test & Quality Checks"]
+    types:
+      - completed
+    branches: [ main, develop, uat ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # Check if tests passed before deploying
+  check-tests:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      deploy-uat: ${{ steps.check-branch.outputs.deploy-uat }}
+      deploy-production: ${{ steps.check-branch.outputs.deploy-production }}
+    
+    steps:
+    - name: Check branch and set deployment flags
+      id: check-branch
+      run: |
+        if [[ "${{ github.event.workflow_run.head_branch }}" == "develop" || "${{ github.event.workflow_run.head_branch }}" == "uat" ]]; then
+          echo "deploy-uat=true" >> $GITHUB_OUTPUT
+          echo "deploy-production=false" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+          echo "deploy-uat=false" >> $GITHUB_OUTPUT
+          echo "deploy-production=true" >> $GITHUB_OUTPUT
+        else
+          echo "deploy-uat=false" >> $GITHUB_OUTPUT
+          echo "deploy-production=false" >> $GITHUB_OUTPUT
+        fi
+
+  # UAT Environment (develop/uat branch)
+  deploy-uat:
+    needs: check-tests
+    if: needs.check-tests.outputs.deploy-uat == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: uat
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to UAT
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: UAT Deployment Success
+      run: |
+        echo "🎉 UAT deployment successful!"
+        echo "📍 URL: ${{ steps.deployment.outputs.page_url }}"
+
+  # Production Environment (main branch)
+  deploy-production:
+    needs: check-tests
+    if: needs.check-tests.outputs.deploy-production == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to Production
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: Production Deployment Success
+      run: |
+        echo "🚀 Production deployment successful!"
+        echo "📍 URL: ${{ steps.deployment.outputs.page_url }}"
+        
+  # Notify on test failure
+  notify-test-failure:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+    - name: Tests Failed - Deployment Blocked
+      run: |
+        echo "❌ Tests failed on branch: ${{ github.event.workflow_run.head_branch }}"
+        echo "🚫 Deployment has been blocked"
+        echo "📋 Please check the test results and fix any issues before deployment"
+        exit 1

@@ -1,0 +1,73 @@
+# GitHub Pages Configuration
+# This file is used by Jekyll if you decide to use Jekyll features
+
+# Site settings
+title: "Apurva Misra - Java Developer Portfolio"
+description: "Personal developer portfolio showcasing Java development skills, projects, and experience"
+author: "Apurva Misra"
+email: "apurvamisra@example.com"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - .gitignore
+  - .github/
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - .eslintrc.json
+  - .stylelintrc.json
+  - .htmlvalidate.json
+
+# Include files
+include:
+  - _redirects
+
+# Collections
+collections:
+  projects:
+    output: true
+    permalink: /projects/:name/
+  blog:
+    output: true
+    permalink: /blog/:year/:month/:day/:title/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "projects"
+    values:
+      layout: "project"
+  - scope:
+      path: ""
+      type: "blog"
+    values:
+      layout: "post"
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# SEO
+seo:
+  type: "Person"
+  name: "Apurva Misra"
+  job_title: "Java Developer"
+  description: "Passionate backend developer with expertise in Java, Spring Boot, RESTful APIs, and microservices"
+  links:
+    - "https://github.com/apurvamisra"
+    - "https://linkedin.com/in/apurvamisra"
+

@@ -1,0 +1,51 @@
+name: Backup Portfolio
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Create Backup
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create backup archive
+      run: |
+        timestamp=$(date +"%Y%m%d_%H%M%S")
+        tar -czf "portfolio_backup_${timestamp}.tar.gz" .
+        echo "Backup created: portfolio_backup_${timestamp}.tar.gz"
+        
+    - name: Upload backup as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: portfolio-backup-${{ github.run_number }}
+        path: portfolio_backup_*.tar.gz
+        retention-days: 30
+        
+    - name: Create release with backup
+      if: github.ref == 'refs/heads/main'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: backup-${{ github.run_number }}
+        release_name: Portfolio Backup ${{ github.run_number }}
+        body: |
+          Automated backup of portfolio files.
+          
+          **Files included:**
+          - index.html
+          - style.css
+          - script.js
+          - README.md
+          
+          **Backup Date:** ${{ github.run_number }}
+        draft: false
+        prerelease: true
+
