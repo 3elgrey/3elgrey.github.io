@@ -11,6 +11,8 @@ This setup provides:
 - ✅ Security scanning
 - ✅ Coverage reporting
 - ✅ Branch protection rules
+- ✅ **Email notifications** for failures and successes
+- ✅ **Slack integration** (optional)
 
 ## 🔧 **Files Created/Modified**
 
@@ -117,7 +119,30 @@ Security Scan
 All Tests Passed
 ```
 
-### **4. Action Version Updates**
+### **4. Email Notification System**
+
+#### **`.github/EMAIL_NOTIFICATION_SETUP.md`** - Notification Guide
+Complete setup for email notifications:
+- Gmail App Password configuration
+- GitHub Secrets setup
+- Email templates and customization
+- Slack integration (optional)
+
+**Notification Types:**
+- 🚨 **Test Failures** - Detailed failure breakdown
+- 🚫 **Deployment Blocked** - When tests prevent deployment
+- ✅ **Deployment Success** - Successful deployment confirmation
+- 💬 **Slack Notifications** - Optional team notifications
+
+**Required GitHub Secrets:**
+```
+EMAIL_USERNAME     - Your Gmail address
+EMAIL_PASSWORD     - Gmail App Password (16 characters)
+NOTIFICATION_EMAIL - Recipient email address
+SLACK_WEBHOOK_URL  - Optional Slack webhook
+```
+
+### **5. Action Version Updates**
 
 Updated all deprecated GitHub Actions to latest versions:
 
@@ -174,6 +199,7 @@ npm run test:coverage
 2. **Set up branch protection rules** (see BRANCH_PROTECTION_SETUP.md)
 3. **Configure GitHub Pages** in repository settings
 4. **Enable Actions** in repository settings
+5. **Set up email notifications** (see EMAIL_NOTIFICATION_SETUP.md)
 
 ### **3. Branch Protection Rules**
 
@@ -196,6 +222,16 @@ Go to: Repository → Settings → Environments
 Create environments:
 - **`production`** (for main branch)
 - **`uat`** (for develop/uat branches)
+
+### **5. Email Notification Setup**
+
+Go to: Repository → Settings → Secrets and variables → Actions
+
+Add required secrets:
+- **`EMAIL_USERNAME`** - Your Gmail address
+- **`EMAIL_PASSWORD`** - Gmail App Password (see EMAIL_NOTIFICATION_SETUP.md)
+- **`NOTIFICATION_EMAIL`** - Email to receive notifications
+- **`SLACK_WEBHOOK_URL`** - Optional Slack webhook
 
 ## 🔍 **Testing the Setup**
 

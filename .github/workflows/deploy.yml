@@ -112,3 +112,64 @@ jobs:
         echo "🚫 Deployment has been blocked"
         echo "📋 Please check the test results and fix any issues before deployment"
         exit 1
+    
+    - name: Send deployment blocked notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "🚫 Portfolio Deployment Blocked - Tests Failed on ${{ github.event.workflow_run.head_branch }}"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🚫 Deployment Blocked</h2>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.event.workflow_run.head_branch }}</p>
+          <p><strong>Commit:</strong> ${{ github.event.workflow_run.head_sha }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+          
+          <h3>⚠️ Issue:</h3>
+          <p>Tests failed in the CI pipeline, preventing deployment to proceed.</p>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.event.workflow_run.html_url }}">View Failed Test Run</a></p>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}">View Commit</a></p>
+          
+          <p><em>Deployment will automatically proceed once tests pass.</em></p>
+
+  # Notify on deployment success
+  notify-deployment-success:
+    runs-on: ubuntu-latest
+    needs: [deploy-uat, deploy-production]
+    if: always() && (needs.deploy-uat.result == 'success' || needs.deploy-production.result == 'success')
+    
+    steps:
+    - name: Send deployment success notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "✅ Portfolio Deployed Successfully to ${{ needs.deploy-production.result == 'success' && 'Production' || 'UAT' }}"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>✅ Deployment Successful</h2>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.event.workflow_run.head_branch }}</p>
+          <p><strong>Environment:</strong> ${{ needs.deploy-production.result == 'success' && 'Production' || 'UAT' }}</p>
+          <p><strong>Commit:</strong> ${{ github.event.workflow_run.head_sha }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+          
+          <h3>🚀 Deployment Details:</h3>
+          <p>Your portfolio has been successfully deployed and is now live!</p>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Deployment Run</a></p>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}">View Commit</a></p>
+          <p><a href="https://3elgrey.github.io/">View Live Site</a></p>
+          
+          <p><em>🎉 Your changes are now live!</em></p>
