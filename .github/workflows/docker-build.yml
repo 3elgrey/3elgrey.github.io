@@ -159,3 +159,41 @@ jobs:
 docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></pre>
           
           <p><em>🎉 Your containerized portfolio is ready for deployment!</em></p>
+
+  # Notify on Docker build failure
+  notify-docker-failure:
+    name: Notify Docker Failure
+    runs-on: ubuntu-latest
+    needs: [docker-test, docker-build-push, docker-security-scan]
+    if: failure()
+    
+    steps:
+    - name: Send Docker build failure notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "🚨 Docker Build Failed - Portfolio Images Not Published"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🚨 Docker Build Failed</h2>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+          
+          <h3>❌ Failed Jobs:</h3>
+          <ul>
+            <li><strong>Docker Test:</strong> ${{ needs.docker-test.result }}</li>
+            <li><strong>Build & Push:</strong> ${{ needs.docker-build-push.result }}</li>
+            <li><strong>Security Scan:</strong> ${{ needs.docker-security-scan.result }}</li>
+          </ul>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Failed Workflow Run</a></p>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}">View Commit</a></p>
+          
+          <p><em>⚠️ Please check the workflow logs and fix any issues before retrying.</em></p>

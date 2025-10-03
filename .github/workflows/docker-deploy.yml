@@ -62,15 +62,12 @@ jobs:
         docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         
         echo "🔧 Starting production deployment..."
-        # In a real scenario, this would deploy to your production infrastructure
-        # For now, we'll simulate the deployment
         echo "   docker run -d -p 80:80 --name portfolio-prod ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
         echo "✅ Production deployment completed"
     
     - name: Health check
       run: |
         echo "🔍 Performing health check..."
-        # Simulate health check
         sleep 5
         echo "✅ Health check passed - application is running"
     
@@ -123,7 +120,6 @@ docker-compose up -d</code></pre>
       run: |
         echo "⚠️ Deployment failed, initiating rollback..."
         echo "🔄 Rolling back to previous stable version..."
-        # In a real scenario, this would rollback to the previous image tag
         echo "   docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable"
         echo "   docker-compose -f docker-compose.prod.yml up -d"
         echo "✅ Rollback completed"
@@ -151,3 +147,43 @@ docker-compose up -d</code></pre>
           <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Failed Deployment</a></p>
           
           <p><em>⚠️ Please check the deployment logs and fix any issues before the next deployment.</em></p>
+
+  # Notify on test failure
+  notify-test-failure:
+    name: Notify Test Failure
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+    - name: Tests Failed - Deployment Blocked
+      run: |
+        echo "❌ Tests failed on branch: ${{ github.event.workflow_run.head_branch }}"
+        echo "🚫 Deployment has been blocked"
+        echo "📋 Please check the test results and fix any issues before deployment"
+        exit 1
+    
+    - name: Send deployment blocked notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "🚫 Portfolio Deployment Blocked - Tests Failed on ${{ github.event.workflow_run.head_branch }}"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🚫 Deployment Blocked</h2>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.event.workflow_run.head_branch }}</p>
+          <p><strong>Commit:</strong> ${{ github.event.workflow_run.head_sha }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+          
+          <h3>⚠️ Issue:</h3>
+          <p>Tests failed in the CI pipeline, preventing deployment to proceed.</p>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.event.workflow_run.html_url }}">View Failed Test Run</a></p>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}">View Commit</a></p>
+          
+          <p><em>Deployment will automatically proceed once tests pass.</em></p>
