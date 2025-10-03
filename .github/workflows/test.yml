@@ -177,12 +177,17 @@ jobs:
         fi
     
     - name: Run security audit
-      run: npm audit --audit-level=moderate
-    
-    - name: Check for known vulnerabilities
       run: |
-        if npm audit --audit-level=high --parseable | grep -q ""; then
+        echo "🔍 Running security audit..."
+        npm audit --audit-level=moderate
+    
+    - name: Check for high severity vulnerabilities
+      run: |
+        echo "🔍 Checking for high severity vulnerabilities..."
+        # npm audit exits with code 0 if no vulnerabilities, non-zero if vulnerabilities found
+        if ! npm audit --audit-level=high > /dev/null 2>&1; then
           echo "❌ High severity vulnerabilities found"
+          echo "📋 Vulnerability details:"
           npm audit --audit-level=high
           exit 1
         else

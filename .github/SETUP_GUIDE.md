@@ -233,6 +233,16 @@ A: Check workflow_run trigger in deploy.yml
 **Q: Coverage reports not generated**
 A: Ensure coverage/ directory is created by Jest
 
+**Q: Security scan fails with "High severity vulnerabilities found" but npm audit shows 0 vulnerabilities**
+A: Fixed in latest version - the workflow now correctly uses npm audit exit codes instead of parsing output
+
+### **Recent Fixes:**
+
+**Security Scan Logic (Fixed)**
+- **Issue:** `grep -q ""` always returned true, causing false positives
+- **Solution:** Use npm audit exit codes (`npm audit --audit-level=high` returns 0 if no vulnerabilities)
+- **Result:** Accurate vulnerability detection
+
 ## 📊 **Results**
 
 After setup completion:
