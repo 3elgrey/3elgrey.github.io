@@ -5,8 +5,7 @@
  * Remove or fix this test after verifying notifications work.
  */
 
-/**
- * describe('Email Notification Testing', () => {
+describe('Email Notification Testing', () => {
   
   test('🚨 INTENTIONAL FAILURE - Testing email notifications', () => {
     // This test will always fail to trigger email notifications
@@ -49,7 +48,7 @@
   });
 
   test('🎯 Conditional failure - Environment-based testing', () => {
-    const isTestingNotifications = true; // Set to false to make test pass
+    const isTestingNotifications = false; // Set to false to make test pass
     
     if (isTestingNotifications) {
       console.log('🔔 Notification testing mode - forcing failure');
@@ -61,4 +60,3 @@
   });
 
 });
- */
