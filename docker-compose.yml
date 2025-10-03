@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Portfolio application
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: portfolio-app
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - portfolio-network
+
+  # Development version with hot reload
+  portfolio-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: portfolio-dev
+    ports:
+      - "3001:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro
+      - ./docker/nginx-dev.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    profiles:
+      - dev
+    networks:
+      - portfolio-network
+
+  # Nginx reverse proxy (for production scaling)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: portfolio-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - portfolio
+    restart: unless-stopped
+    profiles:
+      - proxy
+    networks:
+      - portfolio-network
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: portfolio-monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    networks:
+      - portfolio-network
+
+networks:
+  portfolio-network:
+    driver: bridge
+    name: portfolio-net
+
+volumes:
+  prometheus-data:
+    driver: local

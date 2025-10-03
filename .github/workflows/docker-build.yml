@@ -1,0 +1,161 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Test Docker build
+  docker-test:
+    name: Test Docker Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build test image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        target: builder
+        push: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: test-image:latest
+
+  # Build and push Docker images
+  docker-build-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: docker-test
+    if: github.event_name != 'pull_request'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push production image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        target: production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+    
+    - name: Build and push development image
+      if: github.ref == 'refs/heads/develop'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.dev
+        target: development
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Security scanning
+  docker-security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Notify on Docker build completion
+  notify-docker-success:
+    name: Notify Docker Success
+    runs-on: ubuntu-latest
+    needs: [docker-build-push, docker-security-scan]
+    if: success() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Send Docker build success notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "🐳 Docker Build Successful - Portfolio Images Published"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🐳 Docker Build Successful</h2>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+          
+          <h3>📦 Published Images:</h3>
+          <ul>
+            <li><strong>Production:</strong> ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</li>
+            <li><strong>Tagged:</strong> ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}</li>
+          </ul>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Workflow Run</a></p>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }}">View Container Registry</a></p>
+          
+          <h3>🚀 Usage:</h3>
+          <pre><code>docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></pre>
+          
+          <p><em>🎉 Your containerized portfolio is ready for deployment!</em></p>

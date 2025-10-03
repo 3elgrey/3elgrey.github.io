@@ -1,0 +1,39 @@
+# Development Dockerfile with hot reload
+FROM nginx:alpine AS development
+
+# Install Node.js and development tools
+RUN apk add --no-cache nodejs npm curl
+
+# Set working directory
+WORKDIR /usr/share/nginx/html
+
+# Copy source code
+COPY . .
+
+# Install development dependencies
+RUN npm install
+
+# Copy development nginx configuration
+COPY docker/nginx-dev.conf /etc/nginx/conf.d/default.conf
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S portfolio -u 1001 -G nodejs
+
+# Set permissions
+RUN chown -R portfolio:nodejs /usr/share/nginx/html && \
+    chown -R portfolio:nodejs /var/cache/nginx && \
+    chown -R portfolio:nodejs /var/log/nginx
+
+# Switch to non-root user
+USER portfolio
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
+# Start nginx in development mode
+CMD ["nginx", "-g", "daemon off;"]
