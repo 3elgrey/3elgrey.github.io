@@ -1,0 +1,111 @@
+name: Email Test
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  test-email:
+    name: Test Email Notification
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check secrets are available
+      run: |
+        echo "🔍 Checking if secrets are configured..."
+        if [ -z "${{ secrets.EMAIL_USERNAME }}" ]; then
+          echo "❌ EMAIL_USERNAME secret is missing"
+        else
+          echo "✅ EMAIL_USERNAME secret is set"
+        fi
+        
+        if [ -z "${{ secrets.EMAIL_PASSWORD }}" ]; then
+          echo "❌ EMAIL_PASSWORD secret is missing"
+        else
+          echo "✅ EMAIL_PASSWORD secret is set"
+        fi
+        
+        if [ -z "${{ secrets.NOTIFICATION_EMAIL }}" ]; then
+          echo "❌ NOTIFICATION_EMAIL secret is missing"
+        else
+          echo "✅ NOTIFICATION_EMAIL secret is set"
+        fi
+    
+    - name: Test SMTP connection
+      run: |
+        echo "🔍 Testing SMTP connection to Gmail..."
+        nc -zv smtp.gmail.com 587 && echo "✅ Can reach Gmail SMTP" || echo "❌ Cannot reach Gmail SMTP"
+    
+    - name: Send test email
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "✅ GitHub Actions Email Test - Success!"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions Test <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🎉 Email Test Successful!</h2>
+          
+          <p>If you're reading this email, your GitHub Actions email notification system is working correctly!</p>
+          
+          <h3>📋 Test Details:</h3>
+          <ul>
+            <li><strong>Repository:</strong> ${{ github.repository }}</li>
+            <li><strong>Workflow:</strong> ${{ github.workflow }}</li>
+            <li><strong>Run ID:</strong> ${{ github.run_id }}</li>
+            <li><strong>Triggered by:</strong> ${{ github.actor }}</li>
+            <li><strong>Time:</strong> ${{ github.event.head_commit.timestamp }}</li>
+          </ul>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Workflow Run</a></p>
+          
+          <p><em>✅ Your email notifications are now configured and working!</em></p>
+          
+          <hr>
+          <p><small>This is a test email from GitHub Actions. You can now delete the email-test.yml workflow file.</small></p>
+
+  test-failure-email:
+    name: Test Failure Email Notification
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Intentional failure for testing
+      run: |
+        echo "🚨 This step will fail intentionally to test failure notifications"
+        exit 1
+    
+    - name: Send failure notification
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "🚨 GitHub Actions Test - Failure Notification"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: "GitHub Actions Test <${{ secrets.EMAIL_USERNAME }}>"
+        html_body: |
+          <h2>🚨 Test Failure Notification</h2>
+          
+          <p>This is a test of the failure notification system. The workflow intentionally failed to test email notifications.</p>
+          
+          <h3>📋 Failure Details:</h3>
+          <ul>
+            <li><strong>Repository:</strong> ${{ github.repository }}</li>
+            <li><strong>Workflow:</strong> ${{ github.workflow }}</li>
+            <li><strong>Job:</strong> Test Failure Email Notification</li>
+            <li><strong>Run ID:</strong> ${{ github.run_id }}</li>
+            <li><strong>Triggered by:</strong> ${{ github.actor }}</li>
+          </ul>
+          
+          <h3>🔗 Links:</h3>
+          <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Failed Workflow Run</a></p>
+          
+          <p><em>✅ If you received this email, your failure notifications are working correctly!</em></p>
+          
+          <hr>
+          <p><small>This was an intentional test failure. You can now delete the email-test.yml workflow file.</small></p>
