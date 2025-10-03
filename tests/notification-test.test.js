@@ -5,7 +5,8 @@
  * Remove or fix this test after verifying notifications work.
  */
 
-describe('Email Notification Testing', () => {
+/**
+ * describe('Email Notification Testing', () => {
   
   test('🚨 INTENTIONAL FAILURE - Testing email notifications', () => {
     // This test will always fail to trigger email notifications
@@ -60,3 +61,4 @@ describe('Email Notification Testing', () => {
   });
 
 });
+ */
