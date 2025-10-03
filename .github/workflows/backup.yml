@@ -30,12 +30,12 @@ jobs:
         
     - name: Create release with backup
       if: github.ref == 'refs/heads/main'
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: backup-${{ github.run_number }}
-        release_name: Portfolio Backup ${{ github.run_number }}
+        name: Portfolio Backup ${{ github.run_number }}
         body: |
           Automated backup of portfolio files.
           
@@ -48,4 +48,5 @@ jobs:
           **Backup Date:** ${{ github.run_number }}
         draft: false
         prerelease: true
+        files: portfolio_backup_*.tar.gz
 
