@@ -98,12 +98,11 @@ jobs:
           <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Deployment Run</a></p>
           
           <h3>🐳 Docker Commands:</h3>
-          <pre><code># Pull and run locally
-docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-# Or use docker-compose
-docker-compose up -d</code></pre>
+          <p><strong>Pull and run locally:</strong></p>
+          <p><code>docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></p>
+          <p><code>docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></p>
+          <p><strong>Or use docker-compose:</strong></p>
+          <p><code>docker-compose up -d</code></p>
           
           <p><em>🎉 Your containerized portfolio is now live in production!</em></p>
 

@@ -155,8 +155,9 @@ jobs:
           <p><a href="${{ github.server_url }}/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }}">View Container Registry</a></p>
           
           <h3>🚀 Usage:</h3>
-          <pre><code>docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></pre>
+          <p><strong>Pull and run locally:</strong></p>
+          <p><code>docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></p>
+          <p><code>docker run -p 3000:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest</code></p>
           
           <p><em>🎉 Your containerized portfolio is ready for deployment!</em></p>
 
