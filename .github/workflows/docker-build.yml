@@ -28,8 +28,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
-        target: builder
+        file: ./Dockerfile.prod
         push: false
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -76,8 +75,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
-        target: production
+        file: ./Dockerfile.prod
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
